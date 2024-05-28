@@ -7,7 +7,7 @@ import 'package:http_parser/http_parser.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mime/mime.dart';
 import 'image_picker_widget.dart';
-import 'package:path_provider/path_provider.dart'; // Add this import
+import 'package:path_provider/path_provider.dart';
 
 class StoryGeneratorScreen extends StatefulWidget {
   @override
@@ -77,7 +77,6 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   }
 
   Future<void> _convertStoryToSpeech(String story) async {
-    // Convert story to speech and save it to an audio file
     await _flutterTts.setLanguage("en-US");
     await _flutterTts.setPitch(1.0);
 
@@ -110,13 +109,30 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text('Generate Story from Image')),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            Image.asset('assets/logo.jpg', height: 40),
+            SizedBox(width: 10),
+            Text('PictoNarrot'),
+          ],
+        ),
+      ),
       body: SingleChildScrollView(
-        child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (_imageFile != null) Image.file(_imageFile!),
+              if (_imageFile != null)
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blue, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  margin: EdgeInsets.symmetric(vertical: 10),
+                  child: Image.file(_imageFile!),
+                ),
               ImagePickerWidget(onImagePicked: _onImagePicked),
               SizedBox(height: 20),
               if (_audioUrl.isNotEmpty)
@@ -133,12 +149,13 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                   ],
                 ),
               Container(
-                margin: EdgeInsets.all(10),
+                margin: EdgeInsets.symmetric(vertical: 10),
                 padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.blue, width: 2),
                   borderRadius: BorderRadius.circular(10),
                 ),
+                width: double.infinity,
                 child: Text(
                   _story,
                   textAlign: TextAlign.justify,
