@@ -107,7 +107,7 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   }
 
   Future<String> _getStoryFromNgrok(String imageUrl) async {
-    final String apiUrl = 'https://072e-103-111-133-161.ngrok-free.app/generate_description/?image_url=$imageUrl';
+    final String apiUrl = 'https://babb-103-111-133-161.ngrok-free.app/generate_description/?image_url=$imageUrl';
 
     final response = await http.get(Uri.parse(apiUrl));
     if (response.statusCode == 200) {
@@ -185,23 +185,29 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (_imageFile != null)
-                Column(
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.blue, width: 2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      margin: EdgeInsets.symmetric(vertical: 10),
-                      child: Image.file(_imageFile!),
-                    ),
-                    ElevatedButton(
-                      onPressed: () => _generateStory(_imageFile!),
+                Container(
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.blue, width: 2),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  margin: EdgeInsets.symmetric(vertical: 10),
+                  child: Image.file(_imageFile!),
+                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _imageFile != null ? () => _generateStory(_imageFile!) : null,
                       child: Text('Generate Story'),
                     ),
-                  ],
-                ),
-              ImagePickerWidget(onImagePicked: _onImagePicked),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: ImagePickerWidget(onImagePicked: _onImagePicked),
+                  ),
+                ],
+              ),
               SizedBox(height: 20),
               if (_audioUrl.isNotEmpty)
                 Column(
@@ -223,7 +229,6 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                               _audioPlayer.seek(newPosition);
                             },
                           ),
-
                         ),
                       ],
                     ),
@@ -246,11 +251,16 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                       final index = entry.key;
                       final word = entry.value;
                       final isCurrent = index == _currentWordIndex;
-                      return TextSpan(
-                        text: '$word ',
-                        style: TextStyle(
-                          color: isCurrent ? Colors.blue : Colors.black,
-                          fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                      return WidgetSpan(
+                        child: Container(
+                          color: isCurrent ? Colors.lightBlueAccent : Colors.transparent,
+                          child: Text(
+                            '$word ',
+                            style: TextStyle(
+                              color: Colors.black,
+                              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                            ),
+                          ),
                         ),
                       );
                     }).toList(),
