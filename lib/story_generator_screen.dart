@@ -28,6 +28,11 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   List<String> _words = [];
   bool _isLoading = false;
 
+  String _selectedLanguage = 'English';
+  int _selectedGrade = 1;
+  List<String> _languages = ['English', 'Hindi'];
+  List<int> _grades = List.generate(12, (index) => index + 1);
+
   @override
   void initState() {
     super.initState();
@@ -107,12 +112,15 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   }
 
   Future<String> _getStoryFromNgrok(String imageUrl) async {
-    final String apiUrl = 'https://babb-103-111-133-161.ngrok-free.app/generate_description/?image_url=$imageUrl';
-
+    final String apiUrl = 'https://10d8-103-111-133-199.ngrok-free.app/generate_description/?image_url=$imageUrl&grade=$_selectedGrade&language=$_selectedLanguage';
     final response = await http.get(Uri.parse(apiUrl));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['description'];
+      if (_selectedLanguage == 'Hindi') {
+        return utf8.decode(data['description'].codeUnits);
+      } else {
+        return data['description'];
+      }
     } else {
       throw Exception('Failed to get story. Status code: ${response.statusCode}');
     }
@@ -121,6 +129,15 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   Future<void> _convertStoryToSpeech(String story) async {
     final tempDir = await getTemporaryDirectory();
     final audioFile = File('${tempDir.path}/story.mp3');
+
+    if (_selectedLanguage == 'Hindi') {
+      await _flutterTts.setLanguage("hi-IN");
+      await _flutterTts.setVoice({"name": "hi-in-x-hin-local", "locale": "hi-IN"});
+    } else {
+      await _flutterTts.setLanguage("en-US");
+      await _flutterTts.setVoice({"name": "en-us-x-sfg#male_1-local", "locale": "en-US"});
+    }
+
     await _flutterTts.synthesizeToFile(story, audioFile.path);
 
     setState(() {
@@ -193,6 +210,52 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                   margin: EdgeInsets.symmetric(vertical: 10),
                   child: Image.file(_imageFile!),
                 ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: DropdownButtonFormField<String>(
+                      value: _selectedLanguage,
+                      items: _languages.map((String language) {
+                        return DropdownMenuItem<String>(
+                          value: language,
+                          child: Text(language),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedLanguage = newValue!;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Select Language',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: DropdownButtonFormField<int>(
+                      value: _selectedGrade,
+                      items: _grades.map((int grade) {
+                        return DropdownMenuItem<int>(
+                          value: grade,
+                          child: Text('Grade $grade'),
+                        );
+                      }).toList(),
+                      onChanged: (newValue) {
+                        setState(() {
+                          _selectedGrade = newValue!;
+                        });
+                      },
+                      decoration: InputDecoration(
+                        labelText: 'Select Grade',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
