@@ -112,7 +112,7 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   }
 
   Future<String> _getStoryFromNgrok(String imageUrl) async {
-    final String apiUrl = 'https://10d8-103-111-133-199.ngrok-free.app/generate_description/?image_url=$imageUrl&grade=$_selectedGrade&language=$_selectedLanguage';
+    final String apiUrl = 'https://b41a-103-111-133-210.ngrok-free.app//generate_description/?image_url=$imageUrl&grade=$_selectedGrade';
     final response = await http.get(Uri.parse(apiUrl));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);

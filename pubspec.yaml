@@ -39,6 +39,9 @@ dependencies:
   flutter_tts: ^3.1.0
   just_audio: ^0.9.23
   cupertino_icons: ^1.0.6
+  audio_session: ^0.1.0
+  google_translate: any
+
 
 dev_dependencies:
   flutter_test:
