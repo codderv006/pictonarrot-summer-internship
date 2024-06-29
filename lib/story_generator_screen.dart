@@ -9,6 +9,7 @@ import 'package:mime/mime.dart';
 import 'image_picker_widget.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:audio_session/audio_session.dart';
+import 'flashcard_screen.dart';
 
 class StoryGeneratorScreen extends StatefulWidget {
   @override
@@ -32,6 +33,8 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   int _selectedGrade = 1;
   List<String> _languages = ['English', 'Hindi'];
   List<int> _grades = List.generate(12, (index) => index + 1);
+
+  Map<String, dynamic> grammarElements = {};
 
   @override
   void initState() {
@@ -112,15 +115,14 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   }
 
   Future<String> _getStoryFromNgrok(String imageUrl) async {
-    final String apiUrl = 'https://b41a-103-111-133-210.ngrok-free.app//generate_description/?image_url=$imageUrl&grade=$_selectedGrade';
+    final String apiUrl = 'https://a773-103-111-133-229.ngrok-free.app/generate_description/?image_url=$imageUrl&grade=$_selectedGrade';
     final response = await http.get(Uri.parse(apiUrl));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      if (_selectedLanguage == 'Hindi') {
-        return utf8.decode(data['description'].codeUnits);
-      } else {
-        return data['description'];
-      }
+      setState(() {
+        grammarElements = data; // Store the grammar elements
+      });
+      return _selectedLanguage == 'Hindi' ? utf8.decode(data['story'].codeUnits) : data['story'];
     } else {
       throw Exception('Failed to get story. Status code: ${response.statusCode}');
     }
@@ -285,11 +287,11 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                         ),
                         Expanded(
                           child: Slider(
-                            value: _currentPosition.inMilliseconds.toDouble().clamp(0.0, _audioDuration.inMilliseconds.toDouble()),
-                            max: _audioDuration.inMilliseconds.toDouble(),
-                            onChanged: (value) {
-                              final newPosition = Duration(milliseconds: value.toInt());
-                              _audioPlayer.seek(newPosition);
+                            value: _currentPosition.inSeconds.toDouble(),
+                            max: _audioDuration.inSeconds.toDouble(),
+                            onChanged: (double value) {
+                              final position = Duration(seconds: value.toInt());
+                              _audioPlayer.seek(position);
                             },
                           ),
                         ),
@@ -297,39 +299,44 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                     ),
                   ],
                 ),
+              SizedBox(height: 20),
               Container(
-                margin: EdgeInsets.symmetric(vertical: 10),
-                padding: EdgeInsets.all(10),
                 decoration: BoxDecoration(
                   border: Border.all(color: Colors.blue, width: 2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                width: double.infinity,
+                padding: EdgeInsets.all(10),
                 child: _isLoading
                     ? Center(child: CircularProgressIndicator())
-                    : RichText(
-                  textAlign: TextAlign.justify,
-                  text: TextSpan(
+                    : Text.rich(
+                  TextSpan(
                     children: _words.asMap().entries.map((entry) {
                       final index = entry.key;
                       final word = entry.value;
-                      final isCurrent = index == _currentWordIndex;
-                      return WidgetSpan(
-                        child: Container(
-                          color: isCurrent ? Colors.lightBlueAccent : Colors.transparent,
-                          child: Text(
-                            '$word ',
-                            style: TextStyle(
-                              color: Colors.black,
-                              fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                            ),
-                          ),
+                      return TextSpan(
+                        text: word + ' ',
+                        style: TextStyle(
+                          backgroundColor: index == _currentWordIndex ? Colors.lightBlue : Colors.transparent,
+                          fontSize: 16,
                         ),
                       );
                     }).toList(),
-                    style: TextStyle(color: Colors.black),
                   ),
+                  textAlign: TextAlign.justify,
                 ),
+              ),
+
+              SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FlashcardScreen(grammarElements: grammarElements),
+                    ),
+                  );
+                },
+                child: Text('Learn more using Flashcards'),
               ),
             ],
           ),
