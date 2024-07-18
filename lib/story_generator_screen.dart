@@ -1,15 +1,17 @@
 import 'dart:convert';
 import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:mime/mime.dart';
-import 'image_picker_widget.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:audio_session/audio_session.dart';
+
 import 'flashcard_screen.dart';
+import 'image_picker_widget.dart';
+import 'mcq_screen.dart'; // Import MCQ screen
 
 class StoryGeneratorScreen extends StatefulWidget {
   @override
@@ -56,7 +58,10 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   Future<void> _initializeTts() async {
     await _flutterTts.setLanguage("en-US");
     await _flutterTts.setPitch(0.8); // Slow down the voice
-    await _flutterTts.setVoice({"name": "en-us-x-sfg#male_1-local", "locale": "en-US"}); // Change voice
+    await _flutterTts.setVoice({
+      "name": "en-us-x-sfg#male_1-local",
+      "locale": "en-US"
+    }); // Change voice
   }
 
   Future<void> _generateStory(File imageFile) async {
@@ -115,16 +120,20 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
   }
 
   Future<String> _getStoryFromNgrok(String imageUrl) async {
-    final String apiUrl = 'https://a773-103-111-133-229.ngrok-free.app/generate_description/?image_url=$imageUrl&grade=$_selectedGrade';
+    final String apiUrl =
+        'https://a773-103-111-133-229.ngrok-free.app/generate_description/?image_url=$imageUrl&grade=$_selectedGrade';
     final response = await http.get(Uri.parse(apiUrl));
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
       setState(() {
         grammarElements = data; // Store the grammar elements
       });
-      return _selectedLanguage == 'Hindi' ? utf8.decode(data['story'].codeUnits) : data['story'];
+      return _selectedLanguage == 'Hindi'
+          ? utf8.decode(data['story'].codeUnits)
+          : data['story'];
     } else {
-      throw Exception('Failed to get story. Status code: ${response.statusCode}');
+      throw Exception(
+          'Failed to get story. Status code: ${response.statusCode}');
     }
   }
 
@@ -134,10 +143,16 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
 
     if (_selectedLanguage == 'Hindi') {
       await _flutterTts.setLanguage("hi-IN");
-      await _flutterTts.setVoice({"name": "hi-in-x-hin-local", "locale": "hi-IN"});
+      await _flutterTts.setVoice({
+        "name": "hi-in-x-hin-local",
+        "locale": "hi-IN"
+      });
     } else {
       await _flutterTts.setLanguage("en-US");
-      await _flutterTts.setVoice({"name": "en-us-x-sfg#male_1-local", "locale": "en-US"});
+      await _flutterTts.setVoice({
+        "name": "en-us-x-sfg#male_1-local",
+        "locale": "en-US"
+      });
     }
 
     await _flutterTts.synthesizeToFile(story, audioFile.path);
@@ -171,7 +186,8 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
     if (_audioDuration.inMilliseconds > 0) {
       final totalDuration = _audioDuration.inMilliseconds;
       final currentPosition = _currentPosition.inMilliseconds;
-      final wordIndex = (currentPosition / totalDuration * _words.length).floor();
+      final wordIndex =
+      (currentPosition / totalDuration * _words.length).floor();
       setState(() {
         _currentWordIndex = wordIndex;
       });
@@ -263,7 +279,9 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                 children: [
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _imageFile != null ? () => _generateStory(_imageFile!) : null,
+                      onPressed: _imageFile != null
+                          ? () => _generateStory(_imageFile!)
+                          : null,
                       child: Text('Generate Story'),
                     ),
                   ),
@@ -282,7 +300,8 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         IconButton(
-                          icon: Icon(_isPlaying ? Icons.pause : Icons.play_arrow),
+                          icon: Icon(
+                              _isPlaying ? Icons.pause : Icons.play_arrow),
                           onPressed: _playPauseAudio,
                         ),
                         Expanded(
@@ -290,7 +309,8 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                             value: _currentPosition.inSeconds.toDouble(),
                             max: _audioDuration.inSeconds.toDouble(),
                             onChanged: (double value) {
-                              final position = Duration(seconds: value.toInt());
+                              final position =
+                              Duration(seconds: value.toInt());
                               _audioPlayer.seek(position);
                             },
                           ),
@@ -316,7 +336,9 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                       return TextSpan(
                         text: word + ' ',
                         style: TextStyle(
-                          backgroundColor: index == _currentWordIndex ? Colors.lightBlue : Colors.transparent,
+                          backgroundColor: index == _currentWordIndex
+                              ? Colors.lightBlue
+                              : Colors.transparent,
                           fontSize: 16,
                         ),
                       );
@@ -325,18 +347,31 @@ class _StoryGeneratorScreenState extends State<StoryGeneratorScreen> {
                   textAlign: TextAlign.justify,
                 ),
               ),
-
               SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) => FlashcardScreen(grammarElements: grammarElements),
+                      builder: (context) =>
+                          FlashcardScreen(grammarElements: grammarElements),
                     ),
                   );
                 },
                 child: Text('Learn more using Flashcards'),
+              ),
+              SizedBox(height: 10),
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          McqScreen(questions: grammarElements['questions']),
+                    ),
+                  );
+                },
+                child: Text('Test your knowledge'),
               ),
             ],
           ),
